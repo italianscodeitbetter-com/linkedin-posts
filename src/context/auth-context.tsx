@@ -7,21 +7,42 @@ export type AuthUser = {
   id: string
   email: string
   name?: string
+  avatarUrl?: string
+}
+
+function firstString(
+  ...values: Array<unknown>
+): string | undefined {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) {
+      return value
+    }
+  }
+  return undefined
 }
 
 function mapUser(user: User | null): AuthUser | null {
   if (!user) return null
   const meta = user.user_metadata as Record<string, unknown> | undefined
+  const firstIdentity = user.identities?.[0]?.identity_data as
+    | Record<string, unknown>
+    | undefined
   const name =
-    typeof meta?.full_name === 'string'
-      ? meta.full_name
-      : typeof meta?.name === 'string'
-        ? meta.name
-        : undefined
+    firstString(meta?.full_name, meta?.name, firstIdentity?.name)
+  const avatarUrl = firstString(
+    // LinkedIn OIDC commonly exposes `picture`.
+    meta?.picture,
+    // Common provider keys we may receive from Supabase metadata.
+    meta?.avatar_url,
+    meta?.profile_picture,
+    firstIdentity?.picture,
+    firstIdentity?.avatar_url
+  )
   return {
     id: user.id,
     email: user.email ?? '',
     name,
+    avatarUrl,
   }
 }
 
@@ -43,6 +64,12 @@ type AuthContextValue = {
   signInWithLinkedIn: (params?: {
     nextPath?: string
   }) => Promise<{ error: Error | null }>
+  requestPasswordReset: (
+    email: string
+  ) => Promise<{ error: Error | null }>
+  updatePassword: (
+    password: string
+  ) => Promise<{ error: Error | null }>
   logout: () => Promise<void>
 }
 
@@ -148,6 +175,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
+  const requestPasswordReset = React.useCallback(async (email: string) => {
+    if (!supabase) {
+      return { error: new Error('Supabase non configurato') }
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    })
+    return { error: error ? new Error(error.message) : null }
+  }, [])
+
+  const updatePassword = React.useCallback(async (password: string) => {
+    if (!supabase) {
+      return { error: new Error('Supabase non configurato') }
+    }
+    const { error } = await supabase.auth.updateUser({ password })
+    return { error: error ? new Error(error.message) : null }
+  }, [])
+
   const logout = React.useCallback(async () => {
     if (!supabase) return
     await supabase.auth.signOut()
@@ -162,6 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithPassword,
       signUp,
       signInWithLinkedIn,
+      requestPasswordReset,
+      updatePassword,
       logout,
     }),
     [
@@ -171,6 +218,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithPassword,
       signUp,
       signInWithLinkedIn,
+      requestPasswordReset,
+      updatePassword,
       logout,
     ]
   )

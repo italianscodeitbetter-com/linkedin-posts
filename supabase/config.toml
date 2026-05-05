@@ -8,3 +8,6 @@ enabled = true
 # Require a valid Supabase user JWT before the function runs (recommended).
 [functions.linkedin-proxy]
 verify_jwt = true
+
+[functions.generate-post]
+verify_jwt = true

@@ -22,8 +22,8 @@ export default function AuthCallbackPage() {
       const nextRaw = url.searchParams.get('next')
       const safeNext =
         nextRaw &&
-        nextRaw.startsWith('/') &&
-        !nextRaw.startsWith('//')
+          nextRaw.startsWith('/') &&
+          !nextRaw.startsWith('//')
           ? nextRaw
           : '/'
 
