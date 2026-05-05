@@ -1,21 +1,20 @@
 import * as React from 'react'
 import {
   Briefcase,
-  Copy,
   GraduationCap,
   Lightbulb,
+  Loader2,
   Megaphone,
   PenTool,
   Wrench,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { generatePostWithAnthropic } from '@/lib/generate-post'
-import { saveDraft } from '@/lib/saved-drafts'
 import { cn } from '@/lib/utils'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const POST_STYLES = [
   { label: 'Professionale', icon: Briefcase },
@@ -27,12 +26,10 @@ const POST_STYLES = [
 ]
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const [selectedStyle, setSelectedStyle] = React.useState(POST_STYLES[0].label)
   const [prompt, setPrompt] = React.useState('')
-  const [generatedPost, setGeneratedPost] = React.useState('')
   const [generating, setGenerating] = React.useState(false)
-  const [savingDraft, setSavingDraft] = React.useState(false)
-  const [generationError, setGenerationError] = React.useState<string | null>(null)
 
   const handleGenerate = async () => {
     const trimmedPrompt = prompt.trim()
@@ -41,59 +38,40 @@ export default function HomePage() {
       return
     }
     setGenerating(true)
-    setGenerationError(null)
     try {
       const text = await generatePostWithAnthropic({
         prompt: trimmedPrompt,
         style: selectedStyle,
       })
-      setGeneratedPost(text)
+      navigate('/post-detail', {
+        state: {
+          generatedText: text,
+          style: selectedStyle,
+          prompt: trimmedPrompt,
+        },
+      })
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Errore durante la generazione'
-      setGenerationError(message)
       toast.error(message)
     } finally {
       setGenerating(false)
     }
   }
 
-  const handleCopy = async () => {
-    if (!generatedPost) return
-    try {
-      await navigator.clipboard.writeText(generatedPost)
-      toast.success('Post copiato negli appunti')
-    } catch {
-      toast.error('Impossibile copiare il contenuto')
-    }
-  }
-
-  const handleSaveDraft = async () => {
-    const trimmedPrompt = prompt.trim()
-    if (!generatedPost) {
-      toast.error('Genera prima una bozza da salvare')
-      return
-    }
-    setSavingDraft(true)
-    try {
-      await saveDraft({
-        prompt: trimmedPrompt || 'Prompt non disponibile',
-        style: selectedStyle,
-        generatedText: generatedPost,
-      })
-      toast.success('Bozza salvata')
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Errore durante il salvataggio'
-      toast.error(message)
-    } finally {
-      setSavingDraft(false)
-    }
-  }
-
   return (
     <>
-
+      {generating ? (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/80 backdrop-blur-sm">
+          <Loader2 className="size-8 animate-spin text-primary" />
+          <p className="text-sm font-medium text-foreground">
+            Generazione in corso…
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Stiamo scrivendo il tuo post con stile <span className="font-semibold">{selectedStyle}</span>
+          </p>
+        </div>
+      ) : null}
       <div className="min-h-[calc(100svh-120px)] bg-background px-[40px] pb-10">
         <div className="mx-auto flex min-h-[calc(100svh-200px)] w-full max-w-4xl items-center justify-center">
           <div className="w-full max-w-3xl space-y-5">
@@ -147,48 +125,6 @@ export default function HomePage() {
                   </Button>
                 )
               })}
-            </div>
-
-            <div className="rounded-2xl border bg-card p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <h2 className="text-sm font-semibold tracking-tight">
-                  Bozza generata
-                </h2>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => void handleCopy()}
-                  disabled={!generatedPost}
-                >
-                  <Copy className="size-3.5" aria-hidden />
-                  Copia
-                </Button>
-              </div>
-              <div className="min-h-40 rounded-xl border bg-background p-3">
-                {generationError ? (
-                  <p className="text-sm text-destructive">{generationError}</p>
-                ) : generatedPost ? (
-                  <p className="whitespace-pre-wrap text-sm text-foreground">
-                    {generatedPost}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    La bozza apparira qui dopo la generazione.
-                  </p>
-                )}
-              </div>
-              <div className="mt-3 flex justify-end">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => void handleSaveDraft()}
-                  disabled={!generatedPost || savingDraft}
-                >
-                  {savingDraft ? 'Salvataggio...' : 'Salva bozza'}
-                </Button>
-              </div>
             </div>
           </div>
         </div>

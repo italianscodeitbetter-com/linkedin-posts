@@ -10,6 +10,7 @@ import HomePage from '@/pages/home'
 import LoginPage from '@/pages/login'
 import RegisterPage from '@/pages/register'
 import ResetPasswordPage from '@/pages/reset-password'
+import PostDetailPage from '@/pages/post-detail'
 import SavedDraftsPage from '@/pages/saved'
 
 export default function App() {
@@ -30,6 +31,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/post-detail"
+          element={
+            <ProtectedRoute>
+              <PostDetailPage />
             </ProtectedRoute>
           }
         />
