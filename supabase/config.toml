@@ -1,0 +1,10 @@
+# Minimal config for Edge Functions. Replace project_id with your Supabase project ref
+# (Dashboard → Settings → General → Reference ID).
+project_id = "azfhqkxeubsurgybydpc"
+
+[api]
+enabled = true
+
+# Require a valid Supabase user JWT before the function runs (recommended).
+[functions.linkedin-proxy]
+verify_jwt = true

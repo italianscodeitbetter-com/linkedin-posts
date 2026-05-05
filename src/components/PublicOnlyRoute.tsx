@@ -9,7 +9,15 @@ type PublicOnlyRouteProps = {
 
 /** Login / register: se già autenticato, vai alla home. */
 export function PublicOnlyRoute({ children }: PublicOnlyRouteProps) {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <p className="text-sm text-muted-foreground">Caricamento…</p>
+      </div>
+    )
+  }
 
   if (user) {
     return <Navigate to="/" replace />

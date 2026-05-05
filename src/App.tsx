@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { PublicOnlyRoute } from '@/components/PublicOnlyRoute'
+import AuthCallbackPage from '@/pages/auth-callback'
 import HomePage from '@/pages/home'
 import LoginPage from '@/pages/login'
 import RegisterPage from '@/pages/register'
@@ -17,6 +18,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route
         path="/login"
         element={

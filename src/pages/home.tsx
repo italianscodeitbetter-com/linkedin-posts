@@ -22,7 +22,7 @@ export default function HomePage() {
           <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
             <p className="text-xs text-muted-foreground">
               {user?.name ? `${user.name} · ` : null}
-              {user?.email}
+              {user?.email || 'Account'}
             </p>
             <Button type="button" variant="outline" size="sm" onClick={logout}>
               Esci
