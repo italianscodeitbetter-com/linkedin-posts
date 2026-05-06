@@ -2,7 +2,17 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1"
 
 function cors(req: Request): HeadersInit {
-  const allowOrigin = Deno.env.get("ALLOWED_ORIGIN") ?? "*"
+  const allowedRaw = Deno.env.get("ALLOWED_ORIGINS") ?? Deno.env.get("ALLOWED_ORIGIN") ?? "*"
+  const requestOrigin = req.headers.get("Origin") ?? ""
+
+  let allowOrigin: string
+  if (allowedRaw === "*") {
+    allowOrigin = "*"
+  } else {
+    const allowed = allowedRaw.split(",").map((o) => o.trim())
+    allowOrigin = allowed.includes(requestOrigin) ? requestOrigin : allowed[0]
+  }
+
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     Vary: "Origin",

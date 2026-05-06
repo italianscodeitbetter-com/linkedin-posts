@@ -75,6 +75,9 @@ export default function SavedDraftsPage() {
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <span className="rounded-none border bg-muted px-2 py-1 text-xs font-medium">
+                      {draft.post_name ?? draft.style}
+                    </span>
+                    <span className="rounded-none border bg-primary text-white px-2 py-1 text-xs font-medium">
                       {draft.style}
                     </span>
                     <span className="text-xs text-muted-foreground">

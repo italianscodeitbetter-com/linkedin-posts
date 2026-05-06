@@ -100,7 +100,7 @@ export default function CalendarPage() {
   const weekDayLabels = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
   return (
-    <div className="flex h-[calc(100svh-60px)] flex-col overflow-hidden bg-background">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-6 py-3">
         <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export default function CalendarPage() {
                               hashColor(ev.style),
                             ].join(' ')}
                           >
-                            {ev.style}
+                            {ev.post_name ?? ev.style}
                           </span>
                         ))}
                         {dayEvents.length > 3 && (
