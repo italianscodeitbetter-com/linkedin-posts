@@ -2,7 +2,8 @@ import { supabase } from '@/lib/supabase'
 
 export async function generatePostWithAnthropic(params: {
   prompt: string
-  style: string
+  style: string,
+  postlength: string
 }) {
   if (!supabase) {
     throw new Error(
@@ -14,6 +15,7 @@ export async function generatePostWithAnthropic(params: {
     body: {
       prompt: params.prompt,
       style: params.style,
+      postlength: params.postlength,
     },
   })
 

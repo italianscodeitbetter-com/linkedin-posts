@@ -22,7 +22,7 @@ export function Header({ className }: HeaderProps) {
   return (
     <header className={cn('px-[40px]', className)}>
       <div className="flex items-center justify-between gap-4 pb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/Profile')}>
           <Avatar size="lg">
             {user?.avatarUrl && (
               <AvatarImage src={user.avatarUrl} alt={`Avatar di ${username}`} />

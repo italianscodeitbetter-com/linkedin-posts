@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ChevronLeft, ChevronRight, Copy } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Copy } from 'lucide-react'
 import {
   format,
   startOfMonth,
@@ -203,11 +203,15 @@ export default function CalendarPage() {
                           <span
                             key={ev.id}
                             className={[
-                              'truncate rounded-sm px-1 py-0.5 text-[10px] font-medium leading-tight text-white',
+                              'flex items-center gap-1 truncate rounded-sm px-1 py-0.5 text-[10px] font-medium leading-tight text-white',
                               hashColor(ev.style),
                             ].join(' ')}
                           >
-                            {ev.post_name ?? ev.style}
+                            {ev.isPublished
+                              ? <CheckCircle2 className="size-2.5 shrink-0" aria-hidden />
+                              : <AlertCircle className="size-2.5 shrink-0" aria-hidden />
+                            }
+                            <span className="truncate">{ev.post_name ?? ev.style}</span>
                           </span>
                         ))}
                         {dayEvents.length > 3 && (
@@ -251,14 +255,20 @@ export default function CalendarPage() {
                       onClick={() => setDetailPost(ev)}
                       className="w-full rounded-none border bg-card p-3 text-left text-xs transition-colors hover:bg-muted/40"
                     >
-                      <div className="mb-1.5 flex items-center gap-2">
-                        <span
-                          className={[
-                            'inline-block size-2 shrink-0 rounded-full',
-                            hashColor(ev.style),
-                          ].join(' ')}
-                        />
-                        <span className="font-medium">{ev.style}</span>
+                      <div className="mb-1.5 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={[
+                              'inline-block size-2 shrink-0 rounded-full',
+                              hashColor(ev.style),
+                            ].join(' ')}
+                          />
+                          <span className="font-medium">{ev.post_name ?? ev.style}</span>
+                        </div>
+                        {ev.isPublished
+                          ? <CheckCircle2 className="size-3.5 shrink-0 text-green-500" aria-label="Pubblicato" />
+                          : <AlertCircle className="size-3.5 shrink-0 text-amber-500" aria-label="Non pubblicato" />
+                        }
                       </div>
                       <p className="line-clamp-3 text-muted-foreground">
                         {ev.generated_text}
@@ -291,6 +301,18 @@ export default function CalendarPage() {
                 {detailPost.prompt ? ` · ${detailPost.prompt}` : ''}
               </DialogDescription>
             </DialogHeader>
+
+            {detailPost.isPublished ? (
+              <div className="flex items-center gap-2 rounded-none border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400">
+                <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
+                Post pubblicato su LinkedIn
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-none border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+                Post non ancora pubblicato
+              </div>
+            )}
 
             <div className="max-h-[55vh] overflow-y-auto rounded-none border bg-muted/30 px-4 py-3">
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">

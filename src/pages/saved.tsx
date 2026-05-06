@@ -1,11 +1,11 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Copy, Edit2 } from 'lucide-react'
+import { Copy, Edit2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { listSavedDrafts, type SavedDraft } from '@/lib/saved-drafts'
+import { listSavedDrafts, deleteDraft, type SavedDraft } from '@/lib/saved-drafts'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import DialogEditPost from '@/views/dialogEditPost'
@@ -15,6 +15,8 @@ export default function SavedDraftsPage() {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
+  const [deletingId, setDeletingId] = React.useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
 
 
   const loadDrafts = React.useCallback(async () => {
@@ -34,6 +36,21 @@ export default function SavedDraftsPage() {
   React.useEffect(() => {
     void loadDrafts()
   }, [loadDrafts])
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id)
+    try {
+      await deleteDraft(id)
+      setDrafts((prev) => prev.filter((d) => d.id !== id))
+      toast.success('Bozza eliminata')
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante l\'eliminazione'
+      toast.error(message)
+    } finally {
+      setDeletingId(null)
+      setConfirmDeleteId(null)
+    }
+  }
 
   const handleCopy = async (text: string) => {
     try {
@@ -125,6 +142,39 @@ export default function SavedDraftsPage() {
                         }}
                       />
                     </Dialog>
+
+                    {confirmDeleteId === draft.id ? (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          disabled={deletingId === draft.id}
+                          onClick={() => void handleDelete(draft.id)}
+                        >
+                          {deletingId === draft.id ? 'Eliminazione...' : 'Conferma'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          Annulla
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive  hover:text-destructive-foreground"
+                        onClick={() => setConfirmDeleteId(draft.id)}
+                      >
+                        <Trash2 className="size-3.5" aria-hidden />
+                        Elimina
+                      </Button>
+                    )}
 
 
                   </div>

@@ -4,6 +4,7 @@ import { ArrowLeft, BookmarkCheck, CalendarClock } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import { saveDraft } from '@/lib/saved-drafts'
@@ -20,6 +21,7 @@ export default function PostDetailPage() {
 
   const state = location.state as PostDetailState | null
   const [text, setText] = React.useState(state?.generatedText ?? '')
+  const [postName, setPostName] = React.useState('')
   const [saving, setSaving] = React.useState(false)
 
   React.useEffect(() => {
@@ -36,6 +38,8 @@ export default function PostDetailPage() {
         prompt: state?.prompt ?? '',
         style: state?.style ?? '',
         generatedText: text,
+        isPublished: false,
+        postName: postName.trim() || undefined,
       })
       toast.success('Bozza salvata')
     } catch (e) {
@@ -71,6 +75,20 @@ export default function PostDetailPage() {
           </div>
         </div>
 
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="post-name" className="text-xs font-medium text-muted-foreground">
+            Nome del post
+          </label>
+          <Input
+            id="post-name"
+            placeholder="Es. Lancio evento AI – maggio 2026"
+            value={postName}
+            onChange={(e) => setPostName(e.target.value)}
+            className="rounded-none"
+
+          />
+        </div>
+
         <div className="rounded-none border bg-card shadow-sm">
           <Textarea
             value={text}
@@ -84,11 +102,12 @@ export default function PostDetailPage() {
             </p>
             <div className="flex items-center gap-2">
               <Button
+
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => void handleSave()}
-                disabled={saving || !text.trim()}
+                disabled={saving || !postName && postName.length > 0}
               >
                 <BookmarkCheck className="size-3.5" aria-hidden />
                 {saving ? 'Salvataggio...' : 'Salva bozza'}

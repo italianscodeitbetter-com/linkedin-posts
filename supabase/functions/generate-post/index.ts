@@ -10,6 +10,12 @@ const ALLOWED_STYLES = new Set([
   "Promozionale",
 ])
 
+const LENGTH_INSTRUCTIONS: Record<string, string> = {
+  Corto: "breve, massimo 150 parole, 3-4 paragrafi",
+  Medio: "medio, tra 200 e 300 parole, 5-6 paragrafi",
+  Lungo: "lungo, tra 400 e 600 parole, 7-9 paragrafi con sezioni ben distinte",
+}
+
 function corsHeaders(req: Request): HeadersInit {
   const allowedRaw = Deno.env.get("ALLOWED_ORIGINS") ?? Deno.env.get("ALLOWED_ORIGIN") ?? "*"
   const requestOrigin = req.headers.get("Origin") ?? ""
@@ -31,17 +37,20 @@ function corsHeaders(req: Request): HeadersInit {
   }
 }
 
-function buildSystemPrompt(style: string): string {
+function buildSystemPrompt(style: string, length: string): string {
+  const lengthInstruction = LENGTH_INSTRUCTIONS[length] ?? "medio, tra 200 e 300 parole"
   return [
     "Sei un copywriter LinkedIn esperto in personal branding B2B.",
     "Scrivi in italiano, chiaro e naturale.",
     `Stile richiesto: ${style}.`,
+    `Lunghezza richiesta: ${lengthInstruction}.`,
     "Output richiesto:",
     "- Hook iniziale breve (1 riga).",
-    "- Corpo con 3-6 paragrafi brevi.",
+    "- Corpo del testo nel rispetto della lunghezza indicata.",
     "- Chiusura con CTA concreta.",
     "- 4-6 hashtag pertinenti alla fine.",
     "Evita claim non verificabili e toni troppo artificiali.",
+    "Invece che chiedere informazioni in piu metti dei placeholder da sostituire"
   ].join("\n")
 }
 
@@ -57,6 +66,7 @@ async function callAnthropic(params: {
   apiKey: string
   model: string
   style: string
+  length: string
   prompt: string
 }) {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -70,7 +80,7 @@ async function callAnthropic(params: {
       model: params.model,
       max_tokens: 900,
       temperature: 0.7,
-      system: buildSystemPrompt(params.style),
+      system: buildSystemPrompt(params.style, params.length),
       messages: [{ role: "user", content: params.prompt }],
     }),
   })
@@ -121,6 +131,7 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => null)
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : ""
   const style = typeof body?.style === "string" ? body.style.trim() : ""
+  const length = typeof body?.postlength === "string" ? body.postlength.trim() : ""
 
   if (!prompt || prompt.length < 10) {
     return new Response(
@@ -130,6 +141,12 @@ Deno.serve(async (req) => {
   }
   if (!ALLOWED_STYLES.has(style)) {
     return new Response(JSON.stringify({ error: "Stile non valido" }), {
+      status: 400,
+      headers: { ...headers, "Content-Type": "application/json" },
+    })
+  }
+  if (length && !(length in LENGTH_INSTRUCTIONS)) {
+    return new Response(JSON.stringify({ error: "Lunghezza non valida" }), {
       status: 400,
       headers: { ...headers, "Content-Type": "application/json" },
     })
@@ -159,6 +176,7 @@ Deno.serve(async (req) => {
       apiKey: anthropicApiKey,
       model,
       style,
+      length,
       prompt,
     })
     anthropicRes = attempt.response
@@ -169,7 +187,7 @@ Deno.serve(async (req) => {
 
     const errMessage =
       typeof (anthropicJson as { error?: { message?: string } })?.error?.message ===
-      "string"
+        "string"
         ? (anthropicJson as { error: { message: string } }).error.message
         : ""
     const isModelError =
@@ -188,7 +206,7 @@ Deno.serve(async (req) => {
   if (!anthropicRes.ok) {
     const message =
       typeof (anthropicJson as { error?: { message?: string } })?.error?.message ===
-      "string"
+        "string"
         ? (anthropicJson as { error: { message: string } }).error.message
         : `Errore provider AI sul modello ${usedModel}`
     return new Response(JSON.stringify({ error: message }), {
@@ -200,15 +218,15 @@ Deno.serve(async (req) => {
   const generatedText =
     Array.isArray((anthropicJson as { content?: unknown[] })?.content)
       ? ((anthropicJson as { content: unknown[] }).content)
-          .filter((item: unknown) =>
-            typeof item === "object" &&
-            item !== null &&
-            "type" in item &&
-            (item as { type?: string }).type === "text"
-          )
-          .map((item: unknown) => (item as { text?: string }).text ?? "")
-          .join("\n")
-          .trim()
+        .filter((item: unknown) =>
+          typeof item === "object" &&
+          item !== null &&
+          "type" in item &&
+          (item as { type?: string }).type === "text"
+        )
+        .map((item: unknown) => (item as { text?: string }).text ?? "")
+        .join("\n")
+        .trim()
       : ""
 
   if (!generatedText) {
