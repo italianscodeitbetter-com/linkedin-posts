@@ -22,7 +22,7 @@ export default function App() {
   const showPostLoginHeader = Boolean(user) && !isAuthPath && !isPublicAuthPage
 
   return (
-    <>
+    <div className="flex h-svh flex-col overflow-hidden">
       {showPostLoginHeader ? <Header className="pt-8" /> : null}
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
@@ -77,6 +77,6 @@ export default function App() {
           }
         />
       </Routes>
-    </>
+    </div>
   )
 }

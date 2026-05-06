@@ -7,6 +7,7 @@ export type SavedDraft = {
   generated_text: string
   created_at: string
   scheduled_date?: string
+  post_name?: string
 }
 
 export async function saveDraft(params: {
@@ -52,7 +53,7 @@ export async function listSavedDrafts() {
 
   const { data, error } = await supabase
     .from('saved_drafts')
-    .select('id,prompt,style,generated_text,created_at,scheduled_date')
+    .select('id,prompt,style,generated_text,created_at,scheduled_date,post_name')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
@@ -64,6 +65,7 @@ export async function updateDraft(
   params: {
     generated_text?: string
     scheduled_date?: string | null
+    post_name?: string | null
   }
 ) {
   if (!supabase) {

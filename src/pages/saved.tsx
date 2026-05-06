@@ -45,7 +45,7 @@ export default function SavedDraftsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100svh-120px)] bg-background px-[40px] pb-10 pt-6">
+    <div className="flex-1 overflow-y-auto bg-background px-[40px] pb-10 pt-6">
       <div className="mx-auto w-full max-w-4xl space-y-5">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -75,6 +75,9 @@ export default function SavedDraftsPage() {
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <span className="rounded-none border bg-muted px-2 py-1 text-xs font-medium">
+                      {draft.post_name ?? draft.style}
+                    </span>
+                    <span className="rounded-none border bg-primary text-white px-2 py-1 text-xs font-medium">
                       {draft.style}
                     </span>
                     <span className="text-xs text-muted-foreground">

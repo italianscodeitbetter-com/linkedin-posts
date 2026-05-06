@@ -72,8 +72,8 @@ export default function HomePage() {
           </p>
         </div>
       ) : null}
-      <div className="min-h-[calc(100svh-120px)] bg-background px-[40px] pb-10">
-        <div className="mx-auto flex min-h-[calc(100svh-200px)] w-full max-w-4xl items-center justify-center">
+      <div className="flex-1 overflow-y-auto bg-background px-[40px] pb-10">
+        <div className="mx-auto flex min-h-full w-full max-w-4xl items-center justify-center">
           <div className="w-full max-w-3xl space-y-5">
             <div className="space-y-1 text-center sm:text-left">
               <h1 className="text-2xl font-semibold tracking-tight">
