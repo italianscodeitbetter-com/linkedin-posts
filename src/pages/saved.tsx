@@ -1,16 +1,21 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Copy } from 'lucide-react'
+import { Copy, Edit2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { listSavedDrafts, type SavedDraft } from '@/lib/saved-drafts'
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'
+import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
+import DialogEditPost from '@/views/dialogEditPost'
 
 export default function SavedDraftsPage() {
   const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
+
 
   const loadDrafts = React.useCallback(async () => {
     setLoading(true)
@@ -78,15 +83,48 @@ export default function SavedDraftsPage() {
                       })}
                     </span>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => void handleCopy(draft.generated_text)}
-                  >
-                    <Copy className="size-3.5" aria-hidden />
-                    Copia
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void handleCopy(draft.generated_text)}
+                    >
+                      <Copy className="size-3.5" aria-hidden />
+                      Copia
+                    </Button>
+
+                    <PublishLinkedInButton text={draft.generated_text} />
+
+                    <Dialog
+                      open={openDialogId === draft.id}
+                      onOpenChange={(open) =>
+                        setOpenDialogId(open ? draft.id : null)
+                      }
+                    >
+                      <DialogTrigger asChild>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Edit2 className="size-3.5" aria-hidden />
+                          edit
+                        </Button>
+                      </DialogTrigger>
+                      <DialogEditPost
+                        draft={draft}
+                        onSave={(updated) => {
+                          setDrafts((prev) =>
+                            prev.map((d) => (d.id === updated.id ? updated : d))
+                          )
+                          setOpenDialogId(null)
+                        }}
+                      />
+                    </Dialog>
+
+
+                  </div>
                 </div>
                 <p className="mb-3 text-xs text-muted-foreground">
                   Prompt: {draft.prompt}

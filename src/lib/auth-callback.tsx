@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { supabase } from '@/lib/supabase'
+import { saveLinkedInTokenFromSession } from '@/lib/linkedin'
 
 /** Completes PKCE OAuth (es. LinkedIn): scambia `code` nella query per la sessione. */
 export default function AuthCallbackPage() {
@@ -40,6 +41,8 @@ export default function AuthCallbackPage() {
             return
           }
         }
+        // Persist LinkedIn provider_token to DB if present
+        await saveLinkedInTokenFromSession()
       } else {
         const { data: { session } } = await supabase.auth.getSession()
         if (!session && !cancelled) {

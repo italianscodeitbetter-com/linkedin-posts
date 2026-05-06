@@ -6,6 +6,7 @@ export type SavedDraft = {
   style: string
   generated_text: string
   created_at: string
+  scheduled_date?: string
 }
 
 export async function saveDraft(params: {
@@ -51,9 +52,30 @@ export async function listSavedDrafts() {
 
   const { data, error } = await supabase
     .from('saved_drafts')
-    .select('id,prompt,style,generated_text,created_at')
+    .select('id,prompt,style,generated_text,created_at,scheduled_date')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
   return (data ?? []) as SavedDraft[]
+}
+
+export async function updateDraft(
+  id: string,
+  params: {
+    generated_text?: string
+    scheduled_date?: string | null
+  }
+) {
+  if (!supabase) {
+    throw new Error(
+      'Configura VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY'
+    )
+  }
+
+  const { error } = await supabase
+    .from('saved_drafts')
+    .update(params)
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
 }

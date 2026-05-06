@@ -1,7 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1"
 
-/** CORS for browser calls from your Vite app. Tighten ALLOWED_ORIGIN in production. */
 function cors(req: Request): HeadersInit {
   const allowOrigin = Deno.env.get("ALLOWED_ORIGIN") ?? "*"
   return {
@@ -56,20 +55,24 @@ Deno.serve(async (req) => {
     })
   }
 
-  /**
-   * OAuth access token from LinkedIn (OIDC), available on the client after sign-in:
-   * `const { data: { session } } = await supabase.auth.getSession()`
-   * `session.provider_token`
-   *
-   * Passing it here avoids storing LinkedIn secrets in this function; only logged-in
-   * Supabase users can invoke the proxy.
-   */
-  const linkedInAccessToken = req.headers.get("x-linkedin-access-token")
+  // Resolve the LinkedIn access token: prefer the header, fall back to the DB.
+  let linkedInAccessToken = req.headers.get("x-linkedin-access-token")
+
+  if (!linkedInAccessToken) {
+    const { data: tokenRow } = await supabase
+      .from("linkedin_tokens")
+      .select("access_token")
+      .eq("user_id", user.id)
+      .maybeSingle()
+
+    linkedInAccessToken = tokenRow?.access_token ?? null
+  }
+
   if (!linkedInAccessToken) {
     return new Response(
       JSON.stringify({
         error:
-          "Missing X-LinkedIn-Access-Token. Use session.provider_token after signInWithOAuth with linkedin_oidc.",
+          "LinkedIn non connesso. Connetti il tuo account LinkedIn prima di pubblicare.",
       }),
       {
         status: 400,
@@ -78,36 +81,99 @@ Deno.serve(async (req) => {
     )
   }
 
-  const target =
-    new URL(req.url).searchParams.get("path") ?? "userinfo"
+  const target = new URL(req.url).searchParams.get("path") ?? "userinfo"
 
-  const linkedInUrl =
-    target === "userinfo"
-      ? "https://api.linkedin.com/v2/userinfo"
-      : null
-
-  if (!linkedInUrl) {
-    return new Response(
-      JSON.stringify({
-        error: 'Unsupported path. Use ?path=userinfo or extend the function for other LinkedIn REST endpoints.',
-      }),
-      {
-        status: 400,
-        headers: { ...headers, "Content-Type": "application/json" },
-      }
-    )
+  // ── GET /v2/userinfo ──────────────────────────────────────────────────────
+  if (target === "userinfo") {
+    const liRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { Authorization: `Bearer ${linkedInAccessToken}` },
+    })
+    const body = await liRes.text()
+    return new Response(body, {
+      status: liRes.status,
+      headers: { ...headers, "Content-Type": liRes.headers.get("Content-Type") ?? "application/json" },
+    })
   }
 
-  const liRes = await fetch(linkedInUrl, {
-    headers: { Authorization: `Bearer ${linkedInAccessToken}` },
-  })
+  // ── POST /rest/posts ──────────────────────────────────────────────────────
+  if (target === "post") {
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Use POST for ?path=post" }), {
+        status: 405,
+        headers: { ...headers, "Content-Type": "application/json" },
+      })
+    }
 
-  const body = await liRes.text()
-  const contentType =
-    liRes.headers.get("Content-Type") ?? "application/json"
+    let text: string
+    try {
+      const body = await req.json()
+      text = body.text
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      })
+    }
 
-  return new Response(body, {
-    status: liRes.status,
-    headers: { ...headers, "Content-Type": contentType },
-  })
+    if (!text || typeof text !== "string") {
+      return new Response(JSON.stringify({ error: "Missing 'text' field" }), {
+        status: 400,
+        headers: { ...headers, "Content-Type": "application/json" },
+      })
+    }
+
+    // Get member ID from userinfo to build the author URN
+    const userinfoRes = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { Authorization: `Bearer ${linkedInAccessToken}` },
+    })
+    if (!userinfoRes.ok) {
+      return new Response(
+        JSON.stringify({ error: "Impossibile recuperare il profilo LinkedIn" }),
+        { status: userinfoRes.status, headers: { ...headers, "Content-Type": "application/json" } }
+      )
+    }
+    const { sub } = await userinfoRes.json() as { sub: string }
+
+    // Save linkedin_sub for future reference
+    await supabase
+      .from("linkedin_tokens")
+      .update({ linkedin_sub: sub, updated_at: new Date().toISOString() })
+      .eq("user_id", user.id)
+
+    const postRes = await fetch("https://api.linkedin.com/rest/posts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${linkedInAccessToken}`,
+        "Content-Type": "application/json",
+        "LinkedIn-Version": "202304",
+        "X-RestLi-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify({
+        author: `urn:li:person:${sub}`,
+        commentary: text,
+        visibility: "PUBLIC",
+        distribution: {
+          feedDistribution: "MAIN_FEED",
+          targetEntities: [],
+          thirdPartyDistributionChannels: [],
+        },
+        lifecycleState: "PUBLISHED",
+        isReshareDisabledByAuthor: false,
+      }),
+    })
+
+    const postBody = await postRes.text()
+    return new Response(postBody || JSON.stringify({ ok: true }), {
+      status: postRes.status,
+      headers: {
+        ...headers,
+        "Content-Type": postRes.headers.get("Content-Type") ?? "application/json",
+      },
+    })
+  }
+
+  return new Response(
+    JSON.stringify({ error: "Unsupported path. Use ?path=userinfo or ?path=post" }),
+    { status: 400, headers: { ...headers, "Content-Type": "application/json" } }
+  )
 })

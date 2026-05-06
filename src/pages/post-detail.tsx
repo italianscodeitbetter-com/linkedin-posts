@@ -1,10 +1,11 @@
 import * as React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, BookmarkCheck, CalendarClock, Send } from 'lucide-react'
+import { ArrowLeft, BookmarkCheck, CalendarClock } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import { saveDraft } from '@/lib/saved-drafts'
 
 type PostDetailState = {
@@ -102,14 +103,7 @@ export default function PostDetailPage() {
                 <CalendarClock className="size-3.5" aria-hidden />
                 Programma post
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={!text.trim()}
-              >
-                <Send className="size-3.5" aria-hidden />
-                Crea post
-              </Button>
+              <PublishLinkedInButton text={text} disabled={!text.trim()} />
             </div>
           </div>
         </div>
