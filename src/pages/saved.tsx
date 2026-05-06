@@ -45,7 +45,7 @@ export default function SavedDraftsPage() {
   }
 
   return (
-    <div className="min-h-[calc(100svh-120px)] bg-background px-[40px] pb-10 pt-6">
+    <div className="flex-1 overflow-y-auto bg-background px-[40px] pb-10 pt-6">
       <div className="mx-auto w-full max-w-4xl space-y-5">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">
