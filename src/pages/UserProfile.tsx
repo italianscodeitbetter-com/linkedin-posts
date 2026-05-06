@@ -14,6 +14,7 @@ export default function UserProfile() {
   const [company, setCompany] = React.useState('')
   const [role, setRole] = React.useState('')
   const [roleDescription, setRoleDescription] = React.useState('')
+  const [companyDescription, setCompanyDescription] = React.useState('')
   const [loading, setLoading] = React.useState(true)
   const [saving, setSaving] = React.useState(false)
 
@@ -26,6 +27,7 @@ export default function UserProfile() {
           setCompany(profile.company ?? '')
           setRole(profile.role ?? '')
           setRoleDescription(profile.role_description ?? '')
+          setCompanyDescription(profile.company_description ?? '')
         }
       } catch {
         // profilo non ancora esistente — campi vuoti
@@ -38,7 +40,7 @@ export default function UserProfile() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await upsertUserProfile({ company, role, roleDescription })
+      await upsertUserProfile({ company, role, roleDescription, companyDescription })
       toast.success('Profilo aggiornato')
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Errore nel salvataggio'
@@ -156,6 +158,22 @@ export default function UserProfile() {
                   placeholder="Descrivi brevemente le tue responsabilità e il valore che porti…"
                   value={roleDescription}
                   onChange={(e) => setRoleDescription(e.target.value)}
+                  className="min-h-[120px] resize-none rounded-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="company-description"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Descrizione dell'azienda
+                </label>
+                <Textarea
+                  id="company-description"
+                  placeholder="Descrivi brevemente il business, il settore e i clienti target dell'azienda…"
+                  value={companyDescription}
+                  onChange={(e) => setCompanyDescription(e.target.value)}
                   className="min-h-[120px] resize-none rounded-none"
                 />
               </div>

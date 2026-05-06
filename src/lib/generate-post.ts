@@ -1,9 +1,11 @@
 import { supabase } from '@/lib/supabase'
+import type { UserProfile } from './user-profile'
 
 export async function generatePostWithAnthropic(params: {
   prompt: string
   style: string,
   postlength: string
+  user: UserProfile
 }) {
   if (!supabase) {
     throw new Error(
@@ -16,6 +18,9 @@ export async function generatePostWithAnthropic(params: {
       prompt: params.prompt,
       style: params.style,
       postlength: params.postlength,
+      role: params.user?.role ?? null,
+      role_description: params.user?.role_description ?? null,
+      company_description: params.user?.company_description ?? null,
     },
   })
 

@@ -5,6 +5,7 @@ export type UserProfile = {
   company: string | null
   role: string | null
   role_description: string | null
+  company_description: string | null
   updated_at: string
 }
 
@@ -21,7 +22,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
 
   const { data, error } = await supabase
     .from('user_profiles')
-    .select('id,company,role,role_description,updated_at')
+    .select('id,company,role,role_description,company_description,updated_at')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -33,6 +34,7 @@ export async function upsertUserProfile(params: {
   company: string
   role: string
   roleDescription: string
+  companyDescription: string
 }): Promise<void> {
   if (!supabase) {
     throw new Error('Configura VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY')
@@ -50,6 +52,7 @@ export async function upsertUserProfile(params: {
       company: params.company || null,
       role: params.role || null,
       role_description: params.roleDescription || null,
+      company_description: params.companyDescription || null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'id' }

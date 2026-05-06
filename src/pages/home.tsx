@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { generatePostWithAnthropic } from '@/lib/generate-post'
 import { cn } from '@/lib/utils'
+import { useUserStore } from '@/context/userProfileStore'
 
 const POST_STYLES = [
   { label: 'Professionale', icon: Briefcase },
@@ -37,6 +38,7 @@ export default function HomePage() {
   const [selectedLength, setSelectedLength] = React.useState(POST_LENGTH[0].label)
   const [prompt, setPrompt] = React.useState('')
   const [generating, setGenerating] = React.useState(false)
+  const { user } = useUserStore()
 
   const handleGenerate = async () => {
     const trimmedPrompt = prompt.trim()
@@ -50,6 +52,7 @@ export default function HomePage() {
         prompt: trimmedPrompt,
         style: selectedStyle,
         postlength: selectedLength,
+        user,
       })
       navigate('/post-detail', {
         state: {

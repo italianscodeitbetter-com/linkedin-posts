@@ -37,11 +37,27 @@ function corsHeaders(req: Request): HeadersInit {
   }
 }
 
-function buildSystemPrompt(style: string, length: string): string {
+function buildSystemPrompt(
+  style: string,
+  length: string,
+  role?: string | null,
+  roleDescription?: string | null,
+  companyDescription?: string | null,
+): string {
   const lengthInstruction = LENGTH_INSTRUCTIONS[length] ?? "medio, tra 200 e 300 parole"
+
+  const authorContext: string[] = []
+  if (role) authorContext.push(`Ruolo dell'autore: ${role}.`)
+  if (roleDescription) authorContext.push(`Responsabilità e valore apportato: ${roleDescription}.`)
+  if (companyDescription) authorContext.push(`Contesto aziendale: ${companyDescription}.`)
+
   return [
     "Sei un copywriter LinkedIn esperto in personal branding B2B.",
     "Scrivi in italiano, chiaro e naturale.",
+    ...(authorContext.length > 0
+      ? ["", "Contesto dell'autore del post (usa queste informazioni per personalizzare il tono, gli esempi e il punto di vista):", ...authorContext, ""]
+      : []
+    ),
     `Stile richiesto: ${style}.`,
     `Lunghezza richiesta: ${lengthInstruction}.`,
     "Output richiesto:",
@@ -50,7 +66,7 @@ function buildSystemPrompt(style: string, length: string): string {
     "- Chiusura con CTA concreta.",
     "- 4-6 hashtag pertinenti alla fine.",
     "Evita claim non verificabili e toni troppo artificiali.",
-    "Invece che chiedere informazioni in piu metti dei placeholder da sostituire"
+    "Invece che chiedere informazioni in piu metti dei placeholder da sostituire",
   ].join("\n")
 }
 
@@ -68,6 +84,9 @@ async function callAnthropic(params: {
   style: string
   length: string
   prompt: string
+  role?: string | null
+  roleDescription?: string | null
+  companyDescription?: string | null
 }) {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -80,7 +99,7 @@ async function callAnthropic(params: {
       model: params.model,
       max_tokens: 900,
       temperature: 0.7,
-      system: buildSystemPrompt(params.style, params.length),
+      system: buildSystemPrompt(params.style, params.length, params.role, params.roleDescription, params.companyDescription),
       messages: [{ role: "user", content: params.prompt }],
     }),
   })
@@ -132,6 +151,9 @@ Deno.serve(async (req) => {
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : ""
   const style = typeof body?.style === "string" ? body.style.trim() : ""
   const length = typeof body?.postlength === "string" ? body.postlength.trim() : ""
+  const role = typeof body?.role === "string" && body.role.trim() ? body.role.trim() : null
+  const roleDescription = typeof body?.role_description === "string" && body.role_description.trim() ? body.role_description.trim() : null
+  const companyDescription = typeof body?.company_description === "string" && body.company_description.trim() ? body.company_description.trim() : null
 
   if (!prompt || prompt.length < 10) {
     return new Response(
@@ -178,6 +200,9 @@ Deno.serve(async (req) => {
       style,
       length,
       prompt,
+      role,
+      roleDescription,
+      companyDescription,
     })
     anthropicRes = attempt.response
     anthropicJson = attempt.json
