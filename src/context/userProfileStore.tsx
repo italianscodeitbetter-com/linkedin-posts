@@ -1,17 +1,9 @@
+import type { UserProfile } from '@/lib/user-profile'
 import { create } from 'zustand'
-
-type UserProfile = {
-    id: string
-    company: string
-    role: string
-    role_description: string
-    company_description: string
-    updated_at: string
-}
 
 type UserStore = {
     user: UserProfile | null
-    setUser: (user: UserProfile) => void
+    setUser: (user: UserProfile | null) => void
     updateUser: (partial: Partial<UserProfile>) => void
     clearUser: () => void
 }

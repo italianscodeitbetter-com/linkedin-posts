@@ -5,7 +5,7 @@ export async function generatePostWithAnthropic(params: {
   prompt: string
   style: string,
   postlength: string
-  user: UserProfile
+  user: UserProfile | null
 }) {
   if (!supabase) {
     throw new Error(

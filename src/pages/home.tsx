@@ -21,6 +21,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { useLinkedinStore } from '@/context/linkedinStore'
 import { isLinkedInConnected } from '@/lib/linkedin'
 
+
 const POST_STYLES = [
   { label: 'Professionale', icon: Briefcase },
   { label: 'Storytelling', icon: PenTool },
@@ -61,7 +62,7 @@ export default function HomePage() {
         prompt: trimmedPrompt,
         style: selectedStyle,
         postlength: selectedLength,
-        user,
+        user: user,
       })
       navigate('/post-detail', {
         state: {
