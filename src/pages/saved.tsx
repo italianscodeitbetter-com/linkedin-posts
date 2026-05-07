@@ -9,7 +9,6 @@ import { listSavedDrafts, deleteDraft, type SavedDraft } from '@/lib/saved-draft
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import DialogEditPost from '@/views/dialogEditPost'
 import Loader from '@/components/loader'
-import { useLinkedinStore } from '@/context/linkedinStore'
 import { DownloadImageFromBucket, GetImageUrlFromBucket } from '@/lib/bucket'
 
 export default function SavedDraftsPage() {
@@ -19,7 +18,7 @@ export default function SavedDraftsPage() {
   const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
-  const { isLinkedinConnected } = useLinkedinStore()
+
 
   const loadDrafts = React.useCallback(async () => {
     setLoading(true)

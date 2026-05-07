@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { saveDraft } from '@/lib/saved-drafts'
 import { DatePicker } from '@/components/ui/date-picker'
-import { useLinkedinStore } from '@/context/linkedinStore'
 import ImageUploaderView from '@/views/imageUploaderView'
 import { UploadImageToBucket } from '@/lib/bucket'
 
@@ -27,7 +26,6 @@ export default function PostDetailPage() {
   const [scheduledDate, setScheduledDate] = React.useState<string | undefined>(undefined)
   const [saving, setSaving] = React.useState(false)
   const [img, setImg] = React.useState<File | null>(null)
-  const { isLinkedinConnected } = useLinkedinStore()
 
   React.useEffect(() => {
     if (!state?.generatedText) {

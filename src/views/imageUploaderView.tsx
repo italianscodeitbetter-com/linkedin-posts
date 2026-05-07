@@ -1,6 +1,6 @@
 import ImageUploadButton from '@/components/ImageUploadButton'
 import { GetImageUrlFromBucket } from '@/lib/bucket'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 type ImageUploaderViewProps = {
     img_path?: string | null

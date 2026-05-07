@@ -28,7 +28,6 @@ import {
   DialogClose,
 } from '@/components/ui/dialog'
 import { listSavedDrafts, updateDraft, type SavedDraft } from '@/lib/saved-drafts'
-import { useLinkedinStore } from '@/context/linkedinStore'
 import { DownloadImageFromBucket, GetImageUrlFromBucket } from '@/lib/bucket'
 const EVENT_COLORS = [
   'bg-blue-500',
@@ -55,7 +54,7 @@ export default function CalendarPage() {
   const [drafts, setDrafts] = React.useState<ScheduledDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [detailPost, setDetailPost] = React.useState<ScheduledDraft | null>(null)
-  const { isLinkedinConnected } = useLinkedinStore()
+
 
   const handleCopy = async (text: string) => {
     try {
