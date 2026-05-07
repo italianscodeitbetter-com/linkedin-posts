@@ -52,23 +52,25 @@ export function Header({ className }: HeaderProps) {
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            size="icon-sm"
+            size="sm"
             variant={onHomePage ? 'secondary' : 'outline'}
             onClick={() => navigate('/home')}
             aria-label="Vai alla home"
             title="Home"
           >
             <House className="size-3.5" aria-hidden />
+            Home
           </Button>
           <Button
             type="button"
-            size="icon-sm"
+            size="sm"
             variant={onCalendarPage ? 'secondary' : 'outline'}
             onClick={() => navigate('/calendar')}
             aria-label="Apri calendario"
             title="Calendario"
           >
             <CalendarDays className="size-3.5" aria-hidden />
+            Calendario
           </Button>
           <Button
             type="button"

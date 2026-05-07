@@ -10,11 +10,13 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import DialogEditPost from '@/views/dialogEditPost'
 import Loader from '@/components/loader'
 import { DownloadImageFromBucket, GetImageUrlFromBucket } from '@/lib/bucket'
+import { Input } from '@/components/ui/input'
 
 export default function SavedDraftsPage() {
   const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [searchString, setSearchString] = React.useState<string>('')
   const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
@@ -90,7 +92,22 @@ export default function SavedDraftsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {drafts.map((draft) => (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="post"
+                className="text-s font-medium text-muted-foreground"
+              >
+                Cerca la bozza del post
+              </label>
+              <Input
+                id="company"
+                placeholder="Es. Acme S.r.l."
+                value={searchString}
+                onChange={(e) => setSearchString(e.target.value)}
+                className="rounded-none"
+              />
+            </div>
+            {drafts.filter((draft) => draft.post_name?.toLowerCase().includes(searchString.toLowerCase())).map((draft) => (
               <article key={draft.id} className="rounded-none border bg-card p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
