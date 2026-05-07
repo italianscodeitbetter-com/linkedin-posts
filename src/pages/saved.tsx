@@ -9,6 +9,8 @@ import { listSavedDrafts, deleteDraft, type SavedDraft } from '@/lib/saved-draft
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import DialogEditPost from '@/views/dialogEditPost'
+import Loader from '@/components/loader'
+import { useLinkedinStore } from '@/context/linkedinStore'
 
 export default function SavedDraftsPage() {
   const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
@@ -17,7 +19,7 @@ export default function SavedDraftsPage() {
   const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
-
+  const { isLinkedinConnected } = useLinkedinStore()
 
   const loadDrafts = React.useCallback(async () => {
     setLoading(true)
@@ -36,6 +38,8 @@ export default function SavedDraftsPage() {
   React.useEffect(() => {
     void loadDrafts()
   }, [loadDrafts])
+
+
 
   const handleDelete = async (id: string) => {
     setDeletingId(id)
@@ -75,7 +79,7 @@ export default function SavedDraftsPage() {
 
         {loading ? (
           <div className="rounded-none border bg-card p-6 text-sm text-muted-foreground">
-            Caricamento bozze...
+            <Loader />
           </div>
         ) : error ? (
           <div className="rounded-none border border-destructive/40 bg-card p-6 text-sm text-destructive">
@@ -114,7 +118,7 @@ export default function SavedDraftsPage() {
                       Copia
                     </Button>
 
-                    <PublishLinkedInButton text={draft.generated_text} />
+                    <PublishLinkedInButton text={draft.generated_text} connected={isLinkedinConnected} />
 
                     <Dialog
                       open={openDialogId === draft.id}

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/context/auth-context'
 import { getUserProfile, upsertUserProfile } from '@/lib/user-profile'
+import { useUserStore } from '@/context/userProfileStore'
 
 export default function UserProfile() {
   const { user } = useAuth()
@@ -17,7 +18,7 @@ export default function UserProfile() {
   const [companyDescription, setCompanyDescription] = React.useState('')
   const [loading, setLoading] = React.useState(true)
   const [saving, setSaving] = React.useState(false)
-
+  const { setUser } = useUserStore()
   React.useEffect(() => {
     void (async () => {
       setLoading(true)
@@ -47,16 +48,18 @@ export default function UserProfile() {
       toast.error(msg)
     } finally {
       setSaving(false)
+      const profile = await getUserProfile()
+      setUser(profile)
     }
   }
 
   const initials = user?.name
     ? user.name
-        .split(' ')
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase()
+      .split(' ')
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? '?'
 
   return (

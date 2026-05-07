@@ -17,6 +17,7 @@ export async function saveDraft(params: {
   generatedText: string
   isPublished: boolean
   postName?: string
+  scheduled_date?: string
 }) {
   if (!supabase) {
     throw new Error(
@@ -40,6 +41,7 @@ export async function saveDraft(params: {
       style: params.style,
       generated_text: params.generatedText,
       isPublished: params.isPublished,
+      scheduled_date: params.scheduled_date,
       ...(params.postName ? { post_name: params.postName } : {}),
     })
     .select('id')

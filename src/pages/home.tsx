@@ -1,5 +1,6 @@
 import * as React from 'react'
 import {
+  AlertTriangleIcon,
   Briefcase,
   GraduationCap,
   Lightbulb,
@@ -11,12 +12,14 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { generatePostWithAnthropic } from '@/lib/generate-post'
 import { cn } from '@/lib/utils'
 import { useUserStore } from '@/context/userProfileStore'
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { useLinkedinStore } from '@/context/linkedinStore'
+import { isLinkedInConnected } from '@/lib/linkedin'
 
 const POST_STYLES = [
   { label: 'Professionale', icon: Briefcase },
@@ -39,6 +42,12 @@ export default function HomePage() {
   const [prompt, setPrompt] = React.useState('')
   const [generating, setGenerating] = React.useState(false)
   const { user } = useUserStore()
+  const { setIsLinkedinConnected } = useLinkedinStore()
+
+  React.useEffect(() => {
+    void isLinkedInConnected().then((isConnected) => setIsLinkedinConnected(isConnected))
+    console.log('user', user)
+  }, [])
 
   const handleGenerate = async () => {
     const trimmedPrompt = prompt.trim()
@@ -83,8 +92,21 @@ export default function HomePage() {
           </p>
         </div>
       ) : null}
-      <div className="flex-1 overflow-y-auto bg-background px-[40px] pb-10">
+      <div className="flex-1 bg-background px-[40px] pb-10" style={{ height: user && user.id ? 'auto' : 'calc(100% - 64px)' }}>
+        {!user && <Alert className="w-full border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+          <AlertTriangleIcon />
+          <AlertTitle>Aggiorna le tue informazioni</AlertTitle>
+          <AlertDescription>
+            Per generare post migliori, aggiorna le tue informazioni nel tuo profilo.
+            <Button variant="link" size="sm" onClick={() => navigate('/profile')}>
+              Vai al profilo
+            </Button>
+          </AlertDescription>
+        </Alert>}
+
+
         <div className="mx-auto flex min-h-full w-full max-w-4xl items-center justify-center">
+
           <div className="w-full max-w-3xl space-y-5">
             <div className="space-y-1 text-center sm:text-left">
               <h1 className="text-2xl font-semibold tracking-tight">
