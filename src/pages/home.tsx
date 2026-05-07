@@ -58,7 +58,7 @@ export default function HomePage() {
     try {
       const all = await listSavedDrafts()
       const currentDate = new Date()
-      const filteredDrafts = all.filter((d): d is SavedDraft & { scheduled_date: string } => Boolean(d.scheduled_date)).filter((el) => new Date(el.scheduled_date) < currentDate)
+      const filteredDrafts = all.filter((d): d is SavedDraft & { scheduled_date: string } => Boolean(d.scheduled_date)).filter((el) => new Date(el.scheduled_date) < currentDate).filter((el) => el.isPublished === false)
       setDrafts(
         filteredDrafts
       )
