@@ -14,6 +14,7 @@ import PostDetailPage from '@/pages/post-detail'
 import SavedDraftsPage from '@/pages/saved'
 import UserProfile from './pages/UserProfile'
 
+
 export default function App() {
   const location = useLocation()
   const { user } = useAuth()

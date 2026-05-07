@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import { listSavedDrafts, type SavedDraft } from '@/lib/saved-drafts'
+import { useLinkedinStore } from '@/context/linkedinStore'
 
 const EVENT_COLORS = [
   'bg-blue-500',
@@ -55,6 +56,7 @@ export default function CalendarPage() {
   const [drafts, setDrafts] = React.useState<ScheduledDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [detailPost, setDetailPost] = React.useState<ScheduledDraft | null>(null)
+  const { isLinkedinConnected } = useLinkedinStore()
 
   const handleCopy = async (text: string) => {
     try {
@@ -203,19 +205,19 @@ export default function CalendarPage() {
                           <span
                             key={ev.id}
                             className={[
-                              'flex items-center gap-1 truncate rounded-sm px-1 py-0.5 text-[10px] font-medium leading-tight text-white',
+                              'flex items-center gap-2 truncate rounded-sm px-1 py-1 text-[10px] font-medium leading-tight text-white',
                               hashColor(ev.style),
                             ].join(' ')}
                           >
                             {ev.isPublished
-                              ? <CheckCircle2 className="size-2.5 shrink-0" aria-hidden />
-                              : <AlertCircle className="size-2.5 shrink-0" aria-hidden />
+                              ? <CheckCircle2 className="size-5 shrink-0" aria-hidden />
+                              : <AlertCircle className="size-5 shrink-0" aria-hidden />
                             }
-                            <span className="truncate">{ev.post_name ?? ev.style}</span>
+                            <span className="truncate text-[14px]">{ev.post_name ?? ev.style}</span>
                           </span>
                         ))}
                         {dayEvents.length > 3 && (
-                          <span className="px-1 text-[10px] text-muted-foreground">
+                          <span className="px-1 text-[14px] text-muted-foreground">
                             +{dayEvents.length - 3} altri
                           </span>
                         )}
@@ -291,10 +293,10 @@ export default function CalendarPage() {
                 <span
                   className={[
                     'inline-block size-2.5 shrink-0 rounded-full',
-                    hashColor(detailPost.style),
+                    hashColor(detailPost.post_name ?? detailPost.style),
                   ].join(' ')}
                 />
-                {detailPost.style}
+                {detailPost.post_name ?? detailPost.style}
               </DialogTitle>
               <DialogDescription>
                 {format(parseISO(detailPost.scheduled_date), "d MMMM yyyy", { locale: it })}
@@ -331,7 +333,7 @@ export default function CalendarPage() {
                   <Copy className="size-3.5" aria-hidden />
                   Copia
                 </Button>
-                <PublishLinkedInButton text={detailPost.generated_text} size="sm" />
+                <PublishLinkedInButton text={detailPost.generated_text} size="sm" connected={isLinkedinConnected} />
               </div>
               <DialogClose asChild>
                 <Button type="button" size="sm" variant="ghost">
