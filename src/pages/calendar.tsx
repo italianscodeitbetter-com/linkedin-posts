@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Copy } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Copy, Download } from 'lucide-react'
 import {
   format,
   startOfMonth,
@@ -27,10 +27,8 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog'
-import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
-import { listSavedDrafts, type SavedDraft } from '@/lib/saved-drafts'
-import { useLinkedinStore } from '@/context/linkedinStore'
-
+import { listSavedDrafts, updateDraft, type SavedDraft } from '@/lib/saved-drafts'
+import { DownloadImageFromBucket, GetImageUrlFromBucket } from '@/lib/bucket'
 const EVENT_COLORS = [
   'bg-blue-500',
   'bg-purple-500',
@@ -56,7 +54,7 @@ export default function CalendarPage() {
   const [drafts, setDrafts] = React.useState<ScheduledDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [detailPost, setDetailPost] = React.useState<ScheduledDraft | null>(null)
-  const { isLinkedinConnected } = useLinkedinStore()
+
 
   const handleCopy = async (text: string) => {
     try {
@@ -66,7 +64,26 @@ export default function CalendarPage() {
       toast.error('Impossibile copiare il post')
     }
   }
+  const updateDraftMethod = async (draft: SavedDraft, isPublished: boolean) => {
+    try {
+      await updateDraft(draft.id, {
+        generated_text: draft.generated_text,
+        scheduled_date: draft.scheduled_date ?? null,
+        post_name: draft.post_name ?? null,
+        isPublished,
+        img_path: draft.img_path ?? null,
+      })
 
+      setDrafts((prev) =>
+        prev.map((d) => (d.id === draft.id ? { ...d, isPublished } : d))
+      )
+
+      toast.success('Bozza aggiornata con successo')
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore nel salvataggio'
+      toast.error(message)
+    }
+  }
   React.useEffect(() => {
     void (async () => {
       setLoading(true)
@@ -300,27 +317,51 @@ export default function CalendarPage() {
               </DialogTitle>
               <DialogDescription>
                 {format(parseISO(detailPost.scheduled_date), "d MMMM yyyy", { locale: it })}
+
                 {detailPost.prompt ? ` · ${detailPost.prompt}` : ''}
+
               </DialogDescription>
             </DialogHeader>
 
             {detailPost.isPublished ? (
-              <div className="flex items-center gap-2 rounded-none border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400">
-                <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
-                Post pubblicato su LinkedIn
+              <div className="flex items-center justify-between rounded-none border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400">
+                <div className="flex gap-2">
+                  <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
+                  Post pubblicato su LinkedIn
+                </div>
+
+                <Button type="button" size="sm" variant="outline" onClick={() => {
+                  updateDraftMethod(detailPost, false)
+                  setDetailPost({ ...detailPost, isPublished: false })
+                }}>Rimuovi pubblicazione</Button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 rounded-none border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
-                <AlertCircle className="size-3.5 shrink-0" aria-hidden />
-                Post non ancora pubblicato
+              <div className="flex items-center justify-between rounded-none border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-400">
+                <div className="flex gap-2">
+                  <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+                  Post non ancora pubblicato
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={() => {
+                  updateDraftMethod(detailPost, true)
+                  setDetailPost({ ...detailPost, isPublished: true })
+                }}>Pubblica su LinkedIn</Button>
               </div>
             )}
-
+            <div className="flex justify-center">
+              {detailPost.img_path && (
+                <img
+                  src={GetImageUrlFromBucket(detailPost.img_path) ?? undefined}
+                  alt="Immagine della bozza"
+                  className="mt-1 max-w-[150px] h-auto rounded-none"
+                />
+              )}
+            </div>
             <div className="max-h-[55vh] overflow-y-auto rounded-none border bg-muted/30 px-4 py-3">
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                 {detailPost.generated_text}
               </p>
             </div>
+
 
             <DialogFooter className="flex-row items-center justify-between gap-2 sm:justify-between">
               <div className="flex gap-2">
@@ -333,7 +374,23 @@ export default function CalendarPage() {
                   <Copy className="size-3.5" aria-hidden />
                   Copia
                 </Button>
-                <PublishLinkedInButton text={detailPost.generated_text} size="sm" connected={isLinkedinConnected} />
+                {detailPost.img_path && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void DownloadImageFromBucket(detailPost.img_path!).catch((e) =>
+                      toast.error(e instanceof Error ? e.message : 'Errore nel download')
+                    )}
+                  >
+                    <Download className="size-3.5" aria-hidden />
+                    Scarica immagine
+                  </Button>
+                )}
+
+                {/* <PublishLinkedInButton text={detailPost.generated_text} size="sm" connected={isLinkedinConnected} /> */}
+
+
               </div>
               <DialogClose asChild>
                 <Button type="button" size="sm" variant="ghost">

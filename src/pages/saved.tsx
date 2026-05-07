@@ -1,25 +1,26 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Copy, Edit2, Trash2 } from 'lucide-react'
+import { Copy, Download, Edit2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { listSavedDrafts, deleteDraft, type SavedDraft } from '@/lib/saved-drafts'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
-import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import DialogEditPost from '@/views/dialogEditPost'
 import Loader from '@/components/loader'
-import { useLinkedinStore } from '@/context/linkedinStore'
+import { DownloadImageFromBucket, GetImageUrlFromBucket } from '@/lib/bucket'
+import { Input } from '@/components/ui/input'
 
 export default function SavedDraftsPage() {
   const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [searchString, setSearchString] = React.useState<string>('')
   const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
-  const { isLinkedinConnected } = useLinkedinStore()
+
 
   const loadDrafts = React.useCallback(async () => {
     setLoading(true)
@@ -91,7 +92,22 @@ export default function SavedDraftsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {drafts.map((draft) => (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="post"
+                className="text-s font-medium text-muted-foreground"
+              >
+                Cerca la bozza del post
+              </label>
+              <Input
+                id="company"
+                placeholder="Es. Acme S.r.l."
+                value={searchString}
+                onChange={(e) => setSearchString(e.target.value)}
+                className="rounded-none"
+              />
+            </div>
+            {drafts.filter((draft) => draft.post_name?.toLowerCase().includes(searchString.toLowerCase())).map((draft) => (
               <article key={draft.id} className="rounded-none border bg-card p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -117,8 +133,22 @@ export default function SavedDraftsPage() {
                       <Copy className="size-3.5" aria-hidden />
                       Copia
                     </Button>
+                    {draft.img_path && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void DownloadImageFromBucket(draft.img_path!).catch((e) =>
+                          toast.error(e instanceof Error ? e.message : 'Errore nel download')
+                        )}
+                      >
+                        <Download className="size-3.5" aria-hidden />
+                        Scarica immagine
+                      </Button>
+                    )}
 
-                    <PublishLinkedInButton text={draft.generated_text} connected={isLinkedinConnected} />
+
+                    {/* <PublishLinkedInButton text={draft.generated_text} connected={isLinkedinConnected} /> */}
 
                     <Dialog
                       open={openDialogId === draft.id}
@@ -189,6 +219,15 @@ export default function SavedDraftsPage() {
                 <p className="whitespace-pre-wrap text-sm text-foreground">
                   {draft.generated_text}
                 </p>
+                <div className="flex justify-center">
+                  {draft.img_path && (
+                    <img
+                      src={GetImageUrlFromBucket(draft.img_path) ?? undefined}
+                      alt="Immagine della bozza"
+                      className="mt-3 max-w-[300px] h-auto rounded-none"
+                    />
+                  )}
+                </div>
               </article>
             ))}
           </div>
