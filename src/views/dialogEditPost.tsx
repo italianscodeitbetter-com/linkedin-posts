@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { type SavedDraft, updateDraft } from '@/lib/saved-drafts'
+import { Checkbox } from '@/components/ui/checkbox'
 
 type DialogEditPostProps = {
   draft: SavedDraft
@@ -31,6 +32,7 @@ export default function DialogEditPost({ draft, onSave }: DialogEditPostProps) {
         generated_text: draftToEdit.generated_text,
         scheduled_date: draftToEdit.scheduled_date ?? null,
         post_name: draftToEdit.post_name ?? null,
+        isPublished: draftToEdit.isPublished ?? false,
       })
       toast.success('Bozza aggiornata con successo')
       onSave(draftToEdit)
@@ -67,23 +69,41 @@ export default function DialogEditPost({ draft, onSave }: DialogEditPostProps) {
             setDraftToEdit({ ...draftToEdit, generated_text: e.target.value })
           }
         />
-        <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-medium text-muted-foreground">
-            Programma pubblicazione
-          </p>
-          <DatePicker
-            value={
-              draftToEdit.scheduled_date
-                ? new Date(draftToEdit.scheduled_date)
-                : undefined
-            }
-            onChange={(date) =>
-              setDraftToEdit({
-                ...draftToEdit,
-                scheduled_date: date?.toISOString(),
-              })
-            }
-          />
+        <div className="flex gap-4">
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs font-medium text-muted-foreground">
+              Programma pubblicazione
+            </p>
+            <DatePicker
+              value={
+                draftToEdit.scheduled_date
+                  ? new Date(draftToEdit.scheduled_date)
+                  : undefined
+              }
+              onChange={(date) =>
+                setDraftToEdit({
+                  ...draftToEdit,
+                  scheduled_date: date?.toISOString(),
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs font-medium text-muted-foreground">
+              Il post è pubblicato?
+            </p>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={draftToEdit.isPublished ?? false}
+                onCheckedChange={(checked) =>
+                  setDraftToEdit({ ...draftToEdit, isPublished: checked as boolean })
+                }
+              />
+              <p className="text-xs font-medium text-muted-foreground">
+                Pubblicato
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

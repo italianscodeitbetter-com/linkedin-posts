@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   connectLinkedIn,
-  isLinkedInConnected,
   publishToLinkedIn,
 } from '@/lib/linkedin'
 
@@ -14,6 +13,7 @@ type Props = {
   disabled?: boolean
   size?: React.ComponentProps<typeof Button>['size']
   variant?: React.ComponentProps<typeof Button>['variant']
+  connected?: boolean
 }
 
 export function PublishLinkedInButton({
@@ -21,13 +21,11 @@ export function PublishLinkedInButton({
   disabled,
   size = 'sm',
   variant,
+  connected = false
 }: Props) {
-  const [connected, setConnected] = React.useState<boolean | null>(null)
+
   const [publishing, setPublishing] = React.useState(false)
 
-  React.useEffect(() => {
-    void isLinkedInConnected().then(setConnected)
-  }, [])
 
   const handleClick = async () => {
     if (!connected) {

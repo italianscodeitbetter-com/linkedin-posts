@@ -1,21 +1,25 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Copy, Edit2 } from 'lucide-react'
+import { Copy, Edit2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { listSavedDrafts, type SavedDraft } from '@/lib/saved-drafts'
+import { listSavedDrafts, deleteDraft, type SavedDraft } from '@/lib/saved-drafts'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import DialogEditPost from '@/views/dialogEditPost'
+import Loader from '@/components/loader'
+import { useLinkedinStore } from '@/context/linkedinStore'
 
 export default function SavedDraftsPage() {
   const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [openDialogId, setOpenDialogId] = React.useState<string | null>(null)
-
+  const [deletingId, setDeletingId] = React.useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null)
+  const { isLinkedinConnected } = useLinkedinStore()
 
   const loadDrafts = React.useCallback(async () => {
     setLoading(true)
@@ -34,6 +38,23 @@ export default function SavedDraftsPage() {
   React.useEffect(() => {
     void loadDrafts()
   }, [loadDrafts])
+
+
+
+  const handleDelete = async (id: string) => {
+    setDeletingId(id)
+    try {
+      await deleteDraft(id)
+      setDrafts((prev) => prev.filter((d) => d.id !== id))
+      toast.success('Bozza eliminata')
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Errore durante l\'eliminazione'
+      toast.error(message)
+    } finally {
+      setDeletingId(null)
+      setConfirmDeleteId(null)
+    }
+  }
 
   const handleCopy = async (text: string) => {
     try {
@@ -58,7 +79,7 @@ export default function SavedDraftsPage() {
 
         {loading ? (
           <div className="rounded-none border bg-card p-6 text-sm text-muted-foreground">
-            Caricamento bozze...
+            <Loader />
           </div>
         ) : error ? (
           <div className="rounded-none border border-destructive/40 bg-card p-6 text-sm text-destructive">
@@ -97,7 +118,7 @@ export default function SavedDraftsPage() {
                       Copia
                     </Button>
 
-                    <PublishLinkedInButton text={draft.generated_text} />
+                    <PublishLinkedInButton text={draft.generated_text} connected={isLinkedinConnected} />
 
                     <Dialog
                       open={openDialogId === draft.id}
@@ -125,6 +146,39 @@ export default function SavedDraftsPage() {
                         }}
                       />
                     </Dialog>
+
+                    {confirmDeleteId === draft.id ? (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          disabled={deletingId === draft.id}
+                          onClick={() => void handleDelete(draft.id)}
+                        >
+                          {deletingId === draft.id ? 'Eliminazione...' : 'Conferma'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          Annulla
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive  hover:text-destructive-foreground"
+                        onClick={() => setConfirmDeleteId(draft.id)}
+                      >
+                        <Trash2 className="size-3.5" aria-hidden />
+                        Elimina
+                      </Button>
+                    )}
 
 
                   </div>

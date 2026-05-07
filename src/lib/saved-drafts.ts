@@ -8,12 +8,16 @@ export type SavedDraft = {
   created_at: string
   scheduled_date?: string
   post_name?: string
+  isPublished: boolean
 }
 
 export async function saveDraft(params: {
   prompt: string
   style: string
   generatedText: string
+  isPublished: boolean
+  postName?: string
+  scheduled_date?: string
 }) {
   if (!supabase) {
     throw new Error(
@@ -36,6 +40,9 @@ export async function saveDraft(params: {
       prompt: params.prompt,
       style: params.style,
       generated_text: params.generatedText,
+      isPublished: params.isPublished,
+      scheduled_date: params.scheduled_date,
+      ...(params.postName ? { post_name: params.postName } : {}),
     })
     .select('id')
     .single()
@@ -53,11 +60,26 @@ export async function listSavedDrafts() {
 
   const { data, error } = await supabase
     .from('saved_drafts')
-    .select('id,prompt,style,generated_text,created_at,scheduled_date,post_name')
+    .select('id,prompt,style,generated_text,created_at,scheduled_date,post_name,isPublished')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
   return (data ?? []) as SavedDraft[]
+}
+
+export async function deleteDraft(id: string) {
+  if (!supabase) {
+    throw new Error(
+      'Configura VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY'
+    )
+  }
+
+  const { error } = await supabase
+    .from('saved_drafts')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
 }
 
 export async function updateDraft(
@@ -66,6 +88,7 @@ export async function updateDraft(
     generated_text?: string
     scheduled_date?: string | null
     post_name?: string | null
+    isPublished?: boolean
   }
 ) {
   if (!supabase) {

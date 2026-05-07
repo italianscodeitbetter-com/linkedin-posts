@@ -4,6 +4,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import React from 'react'
+import { getUserProfile } from '@/lib/user-profile'
+import { useUserStore } from '@/context/userProfileStore'
 
 type HeaderProps = {
   className?: string
@@ -18,11 +21,23 @@ export function Header({ className }: HeaderProps) {
   const onHomePage = location.pathname === '/home'
   const onCalendarPage = location.pathname === '/calendar'
   const onSavedPage = location.pathname === '/saved'
+  const { setUser } = useUserStore()
+
+  React.useEffect(() => {
+    void (async () => {
+      try {
+        const profile = await getUserProfile()
+        setUser(profile)
+      } catch {
+        // profilo non ancora esistente — campi vuoti
+      }
+    })()
+  }, [])
 
   return (
     <header className={cn('px-[40px]', className)}>
       <div className="flex items-center justify-between gap-4 pb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/Profile')}>
           <Avatar size="lg">
             {user?.avatarUrl && (
               <AvatarImage src={user.avatarUrl} alt={`Avatar di ${username}`} />
@@ -72,3 +87,5 @@ export function Header({ className }: HeaderProps) {
     </header>
   )
 }
+
+

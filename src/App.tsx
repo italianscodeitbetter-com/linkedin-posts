@@ -12,6 +12,8 @@ import RegisterPage from '@/pages/register'
 import ResetPasswordPage from '@/pages/reset-password'
 import PostDetailPage from '@/pages/post-detail'
 import SavedDraftsPage from '@/pages/saved'
+import UserProfile from './pages/UserProfile'
+
 
 export default function App() {
   const location = useLocation()
@@ -31,6 +33,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Profile"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
             </ProtectedRoute>
           }
         />

@@ -1,12 +1,14 @@
 import * as React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, BookmarkCheck, CalendarClock } from 'lucide-react'
+import { ArrowLeft, BookmarkCheck } from 'lucide-react'
 import { toast } from 'sonner'
-
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import { saveDraft } from '@/lib/saved-drafts'
+import { DatePicker } from '@/components/ui/date-picker'
+import { useLinkedinStore } from '@/context/linkedinStore'
 
 type PostDetailState = {
   generatedText: string
@@ -20,7 +22,10 @@ export default function PostDetailPage() {
 
   const state = location.state as PostDetailState | null
   const [text, setText] = React.useState(state?.generatedText ?? '')
+  const [postName, setPostName] = React.useState('')
+  const [scheduledDate, setScheduledDate] = React.useState<string | undefined>(undefined)
   const [saving, setSaving] = React.useState(false)
+  const { isLinkedinConnected } = useLinkedinStore()
 
   React.useEffect(() => {
     if (!state?.generatedText) {
@@ -36,6 +41,9 @@ export default function PostDetailPage() {
         prompt: state?.prompt ?? '',
         style: state?.style ?? '',
         generatedText: text,
+        isPublished: false,
+        postName: postName.trim() || undefined,
+        scheduled_date: scheduledDate ?? undefined,
       })
       toast.success('Bozza salvata')
     } catch (e) {
@@ -71,6 +79,37 @@ export default function PostDetailPage() {
           </div>
         </div>
 
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="post-name" className="text-xs font-medium text-muted-foreground">
+            Nome del post
+          </label>
+          <Input
+            id="post-name"
+            placeholder="Es. Lancio evento AI – maggio 2026"
+            value={postName}
+            onChange={(e) => setPostName(e.target.value)}
+            className="rounded-none"
+
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="post-name" className="text-xs font-medium text-muted-foreground">
+            Quando vuoi programmare il post?
+          </label>
+          <DatePicker
+            value={
+              scheduledDate
+                ? new Date(scheduledDate)
+                : undefined
+            }
+            onChange={(date) =>
+              setScheduledDate(
+                date?.toISOString() ?? undefined)
+            }
+          />
+        </div>
+
+
         <div className="rounded-none border bg-card shadow-sm">
           <Textarea
             value={text}
@@ -84,26 +123,17 @@ export default function PostDetailPage() {
             </p>
             <div className="flex items-center gap-2">
               <Button
+
                 type="button"
                 size="sm"
                 variant="outline"
                 onClick={() => void handleSave()}
-                disabled={saving || !text.trim()}
+                disabled={saving || !postName && postName.length > 0}
               >
                 <BookmarkCheck className="size-3.5" aria-hidden />
                 {saving ? 'Salvataggio...' : 'Salva bozza'}
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => navigate('/calendar')}
-                disabled={!text.trim()}
-              >
-                <CalendarClock className="size-3.5" aria-hidden />
-                Programma post
-              </Button>
-              <PublishLinkedInButton text={text} disabled={!text.trim()} />
+              <PublishLinkedInButton text={text} disabled={!text.trim()} connected={isLinkedinConnected} />
             </div>
           </div>
         </div>
