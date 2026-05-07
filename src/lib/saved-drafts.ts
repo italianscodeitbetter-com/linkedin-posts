@@ -9,6 +9,7 @@ export type SavedDraft = {
   scheduled_date?: string
   post_name?: string
   isPublished: boolean
+  img_path?: string
 }
 
 export async function saveDraft(params: {
@@ -18,6 +19,7 @@ export async function saveDraft(params: {
   isPublished: boolean
   postName?: string
   scheduled_date?: string
+  img_path?: string
 }) {
   if (!supabase) {
     throw new Error(
@@ -42,6 +44,7 @@ export async function saveDraft(params: {
       generated_text: params.generatedText,
       isPublished: params.isPublished,
       scheduled_date: params.scheduled_date,
+      img_path: params.img_path || null,
       ...(params.postName ? { post_name: params.postName } : {}),
     })
     .select('id')
@@ -60,7 +63,7 @@ export async function listSavedDrafts() {
 
   const { data, error } = await supabase
     .from('saved_drafts')
-    .select('id,prompt,style,generated_text,created_at,scheduled_date,post_name,isPublished')
+    .select('id,prompt,style,generated_text,created_at,scheduled_date,post_name,isPublished,img_path')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
@@ -89,6 +92,7 @@ export async function updateDraft(
     scheduled_date?: string | null
     post_name?: string | null
     isPublished?: boolean
+    img_path?: string | null
   }
 ) {
   if (!supabase) {

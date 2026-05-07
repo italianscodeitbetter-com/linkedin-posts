@@ -5,10 +5,11 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import { saveDraft } from '@/lib/saved-drafts'
 import { DatePicker } from '@/components/ui/date-picker'
 import { useLinkedinStore } from '@/context/linkedinStore'
+import ImageUploaderView from '@/views/imageUploaderView'
+import { UploadImageToBucket } from '@/lib/bucket'
 
 type PostDetailState = {
   generatedText: string
@@ -25,6 +26,7 @@ export default function PostDetailPage() {
   const [postName, setPostName] = React.useState('')
   const [scheduledDate, setScheduledDate] = React.useState<string | undefined>(undefined)
   const [saving, setSaving] = React.useState(false)
+  const [img, setImg] = React.useState<File | null>(null)
   const { isLinkedinConnected } = useLinkedinStore()
 
   React.useEffect(() => {
@@ -36,6 +38,10 @@ export default function PostDetailPage() {
   const handleSave = async () => {
     if (!text.trim()) return
     setSaving(true)
+
+    if (img) {
+      await UploadImageToBucket(img)
+    }
     try {
       await saveDraft({
         prompt: state?.prompt ?? '',
@@ -44,6 +50,7 @@ export default function PostDetailPage() {
         isPublished: false,
         postName: postName.trim() || undefined,
         scheduled_date: scheduledDate ?? undefined,
+        img_path: img?.name ?? undefined,
       })
       toast.success('Bozza salvata')
     } catch (e) {
@@ -108,7 +115,7 @@ export default function PostDetailPage() {
             }
           />
         </div>
-
+        <ImageUploaderView imageToUpload={(file) => { setImg(file) }} />
 
         <div className="rounded-none border bg-card shadow-sm">
           <Textarea
@@ -133,7 +140,7 @@ export default function PostDetailPage() {
                 <BookmarkCheck className="size-3.5" aria-hidden />
                 {saving ? 'Salvataggio...' : 'Salva bozza'}
               </Button>
-              <PublishLinkedInButton text={text} disabled={!text.trim()} connected={isLinkedinConnected} />
+              {/* <PublishLinkedInButton text={text} disabled={!text.trim()} connected={isLinkedinConnected} /> */}
             </div>
           </div>
         </div>

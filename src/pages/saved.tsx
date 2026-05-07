@@ -1,16 +1,16 @@
 import * as React from 'react'
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { Copy, Edit2, Trash2 } from 'lucide-react'
+import { Copy, Download, Edit2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { listSavedDrafts, deleteDraft, type SavedDraft } from '@/lib/saved-drafts'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
-import { PublishLinkedInButton } from '@/components/PublishLinkedInButton'
 import DialogEditPost from '@/views/dialogEditPost'
 import Loader from '@/components/loader'
 import { useLinkedinStore } from '@/context/linkedinStore'
+import { DownloadImageFromBucket, GetImageUrlFromBucket } from '@/lib/bucket'
 
 export default function SavedDraftsPage() {
   const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
@@ -117,8 +117,22 @@ export default function SavedDraftsPage() {
                       <Copy className="size-3.5" aria-hidden />
                       Copia
                     </Button>
+                    {draft.img_path && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void DownloadImageFromBucket(draft.img_path!).catch((e) =>
+                          toast.error(e instanceof Error ? e.message : 'Errore nel download')
+                        )}
+                      >
+                        <Download className="size-3.5" aria-hidden />
+                        Scarica immagine
+                      </Button>
+                    )}
 
-                    <PublishLinkedInButton text={draft.generated_text} connected={isLinkedinConnected} />
+
+                    {/* <PublishLinkedInButton text={draft.generated_text} connected={isLinkedinConnected} /> */}
 
                     <Dialog
                       open={openDialogId === draft.id}
@@ -189,6 +203,15 @@ export default function SavedDraftsPage() {
                 <p className="whitespace-pre-wrap text-sm text-foreground">
                   {draft.generated_text}
                 </p>
+                <div className="flex justify-center">
+                  {draft.img_path && (
+                    <img
+                      src={GetImageUrlFromBucket(draft.img_path) ?? undefined}
+                      alt="Immagine della bozza"
+                      className="mt-3 max-w-[300px] h-auto rounded-none"
+                    />
+                  )}
+                </div>
               </article>
             ))}
           </div>
