@@ -2,6 +2,7 @@ import * as React from 'react'
 import {
   AlertTriangleIcon,
   Briefcase,
+  ChevronRightIcon,
   GraduationCap,
   Lightbulb,
   Loader2,
@@ -20,6 +21,7 @@ import { useUserStore } from '@/context/userProfileStore'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { useLinkedinStore } from '@/context/linkedinStore'
 import { isLinkedInConnected } from '@/lib/linkedin'
+import { listSavedDrafts, type SavedDraft } from '@/lib/saved-drafts'
 
 
 const POST_STYLES = [
@@ -44,11 +46,28 @@ export default function HomePage() {
   const [generating, setGenerating] = React.useState(false)
   const { user } = useUserStore()
   const { setIsLinkedinConnected } = useLinkedinStore()
+  const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
 
   React.useEffect(() => {
     void isLinkedInConnected().then((isConnected) => setIsLinkedinConnected(isConnected))
     console.log('user', user)
+    loadDrafts()
   }, [])
+
+  const loadDrafts = async () => {
+    try {
+      const all = await listSavedDrafts()
+      const currentDate = new Date()
+      const filteredDrafts = all.filter((d): d is SavedDraft & { scheduled_date: string } => Boolean(d.scheduled_date)).filter((el) => new Date(el.scheduled_date) < currentDate)
+      setDrafts(
+        filteredDrafts
+      )
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Errore durante il caricamento delle bozze'
+      toast.error(message)
+    }
+  }
 
   const handleGenerate = async () => {
     const trimmedPrompt = prompt.trim()
@@ -104,6 +123,21 @@ export default function HomePage() {
             </Button>
           </AlertDescription>
         </Alert>}
+
+        {drafts.length > 0 && (
+          <Alert className="w-full border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+            <AlertTriangleIcon />
+            <AlertTitle>Hai dei post da pubblicare</AlertTitle>
+            <AlertDescription>
+              Controlla il tuo calendario e pubblica i post programmati. Hai {drafts.length} post da pubblicare.
+              <Button variant="link" size="sm" onClick={() => navigate('/calendar')}>
+                Vai al calendario
+                <ChevronRightIcon className="size-4" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+
+        )}
 
 
         <div className="mx-auto flex min-h-full w-full max-w-4xl items-center justify-center">

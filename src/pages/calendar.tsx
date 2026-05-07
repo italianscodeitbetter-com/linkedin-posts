@@ -12,7 +12,6 @@ import {
   addMonths,
   subMonths,
   isToday,
-  parseISO,
 } from 'date-fns'
 import { it } from 'date-fns/locale'
 import { toast } from 'sonner'
@@ -46,14 +45,12 @@ function hashColor(str: string) {
   return EVENT_COLORS[Math.abs(hash) % EVENT_COLORS.length]
 }
 
-type ScheduledDraft = SavedDraft & { scheduled_date: string }
-
 export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = React.useState(new Date())
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(new Date())
-  const [drafts, setDrafts] = React.useState<ScheduledDraft[]>([])
+  const [drafts, setDrafts] = React.useState<SavedDraft[]>([])
   const [loading, setLoading] = React.useState(true)
-  const [detailPost, setDetailPost] = React.useState<ScheduledDraft | null>(null)
+  const [detailPost, setDetailPost] = React.useState<SavedDraft | null>(null)
 
 
   const handleCopy = async (text: string) => {
@@ -90,7 +87,7 @@ export default function CalendarPage() {
       try {
         const all = await listSavedDrafts()
         setDrafts(
-          all.filter((d): d is ScheduledDraft => Boolean(d.scheduled_date))
+          all.filter((d): d is SavedDraft => Boolean(d.scheduled_date))
         )
       } catch {
         // silently fail — calendar still works without events
@@ -112,7 +109,7 @@ export default function CalendarPage() {
   }
 
   const eventsForDay = (day: Date) =>
-    drafts.filter((d) => isSameDay(parseISO(d.scheduled_date), day))
+    drafts.filter((d) => d.scheduled_date && isSameDay(new Date(d.scheduled_date), day))
 
   const selectedDayEvents = selectedDate ? eventsForDay(selectedDate) : []
 
@@ -316,7 +313,7 @@ export default function CalendarPage() {
                 {detailPost.post_name ?? detailPost.style}
               </DialogTitle>
               <DialogDescription>
-                {format(parseISO(detailPost.scheduled_date), "d MMMM yyyy", { locale: it })}
+                {detailPost.scheduled_date && format(new Date(detailPost.scheduled_date), "d MMMM yyyy", { locale: it })}
 
                 {detailPost.prompt ? ` · ${detailPost.prompt}` : ''}
 
